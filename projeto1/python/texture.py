@@ -12,7 +12,7 @@ class Texture(Appearance):
     glBindTexture(GL_TEXTURE_2D,self.tex)
     if filename:
       img = Image.open(filename)
-      img = img.transpose(Image.FLIP_TOP_BOTTOM)
+      #img = img.transpose(Image.FLIP_TOP_BOTTOM)
       data = np.array(img)
       width, height = img.size
       if (img.mode == 'RGB'):

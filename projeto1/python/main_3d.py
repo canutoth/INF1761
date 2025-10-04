@@ -16,6 +16,7 @@ from sphere import *
 from texture import * 
 from polyoffset import * 
 from quad import *
+from pathlib import Path
 
 def main():
     # Initialize the library
@@ -72,7 +73,7 @@ def initialize (win):
   white = Material(1.0,1.0,1.0)
   red = Material(1.0,0.5,0.5)
   poff = PolygonOffset(-1,-1)
-  paper = Texture("decal","../../images/paper.jpg")
+  paper = Texture("decal","projeto1/images/paper.jpg")
 
   trf1 = Transform()
   trf1.Scale(3.0,0.3,3.0)
@@ -84,20 +85,20 @@ def initialize (win):
   trf3.Translate(0.8,0.0,0.8)
   trf3.Rotate(30.0,0.0,1.0,0.0)
   trf3.Rotate(90.0,-1.0,0.0,0.0)
-  trf3.Scale(0.5,0.7,1.0);
+  trf3.Scale(0.5,0.7,1.0)
 
   cube = Cube() 
   quad = Quad() 
   sphere = Sphere()
 
   shader = Shader(light,"world")
-  shader.AttachVertexShader("../../shaders/ilum_frag/vertex.glsl")
-  shader.AttachFragmentShader("../../shaders/ilum_frag/fragment.glsl")
+  shader.AttachVertexShader("projeto1/shaders/ilum_vert/vertex.glsl")
+  shader.AttachFragmentShader("projeto1/shaders/ilum_vert/fragment.glsl")
   shader.Link()
 
   shd_tex = Shader(light,"world")
-  shd_tex.AttachVertexShader("../../shaders/texture/vertex.glsl")
-  shd_tex.AttachFragmentShader("../../shaders/texture/fragment.glsl")
+  shd_tex.AttachVertexShader("projeto1/shaders/ilum_vert/vertex_texture.glsl")
+  shd_tex.AttachFragmentShader("projeto1/shaders/ilum_vert/fragment_texture.glsl")
   shd_tex.Link()
   # build scene
   root = Node(shader,

@@ -23,6 +23,7 @@ from transform import Transform
 from node import Node
 from scene import Scene
 from disk import Disk
+from texture import * 
 from solar_system_engine import SolarSystemEngine
 
 def initialize():
@@ -46,10 +47,20 @@ def initialize():
   shader.AttachFragmentShader(str(root_dir / "shaders/ilum_vert/fragment.glsl"))
   shader.Link()
 
-  sun_mat = Material(1.0, 0.9, 0.1)
-  earth_mat = Material(52/255, 55/255, 235/255)
-  moon_mat = Material(0.7, 0.7, 0.7)
-  venus_mat = Material(0.8, 0.5, 0.2)
+  shd_tex = Shader(light, "world")
+  shd_tex.AttachVertexShader(root_dir / "shaders/ilum_vert/vertex_texture.glsl")
+  shd_tex.AttachFragmentShader(root_dir / "shaders/ilum_vert/fragment_texture.glsl")
+  shd_tex.Link()
+
+  sun_mat = Material(1.0, 1.0, 1.0)
+  earth_mat = Material(1.0, 1.0, 1.0)
+  moon_mat = Material(1.0, 1.0, 1.0)
+  venus_mat = Material(1.0, 1.0, 1.0)
+
+  sun_tex = Texture("decal", root_dir / "images/sun_image.png")
+  earth_tex = Texture("decal", root_dir / "images/NASA_earth.jpg")
+  venus_tex = Texture("decal", root_dir / "images/venus.jpg")
+  moon_tex = Texture("decal", root_dir / "images/moon.jpg")
 
   sun_radius = 2.0
   earth_radius = 0.6
@@ -80,18 +91,18 @@ def initialize():
   angle_rad = 2.0 * math.atan(float(half_extent) / float(dist))
   camera.SetAngle(math.degrees(angle_rad))
 
-  sun_node = Node(trf=sun_trf, apps=[sun_mat], shps=[sun_disk])
-  venus_node = Node(apps=[venus_mat], shps=[venus_disk])
+  sun_node = Node(trf=sun_trf, apps=[sun_mat, sun_tex], shps=[sun_disk])
+  venus_node = Node(apps=[venus_mat, venus_tex], shps=[venus_disk])
   venus_branch = Node(trf=venus_orbit, nodes=[Node(trf=venus_offset, nodes=[venus_node])])
-  earth_node = Node(trf=earth_tilt, nodes=[Node(trf=earth_spin, apps=[earth_mat], shps=[earth_disk])])
-  moon_node = Node(trf=moon_spin, apps=[moon_mat], shps=[moon_disk])
+  earth_node = Node(trf=earth_tilt, nodes=[Node(trf=earth_spin, apps=[earth_mat, earth_tex], shps=[earth_disk])])
+  moon_node = Node(trf=moon_spin, apps=[moon_mat, moon_tex], shps=[moon_disk])
   earth_offset_node = Node(trf=earth_offset, nodes=[
     earth_node,
     Node(trf=moon_orbit, nodes=[Node(trf=moon_offset, nodes=[moon_node])])
   ])
   earth_branch = Node(trf=earth_orbit, nodes=[earth_offset_node])
 
-  root = Node(shader, nodes=[sun_node, venus_branch, earth_branch])
+  root = Node(shd_tex, nodes=[sun_node, venus_branch, earth_branch])
 
   global scene
   scene = Scene(root)
