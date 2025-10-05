@@ -21,7 +21,7 @@ class Disk(Shape):
       ang = (i % slices) * 2.0 * math.pi / slices
       x = radius * math.cos(ang)
       z = radius * math.sin(ang)
-      coord[i + 1] = [x, 0.0, z]
+      coord[i + 1] = [x, z, 0.0]
       # map to texture [0,1]x[0,1] with center at (0.5,0.5)
       texco[i + 1] = [0.5 + 0.5 * (x / radius), 0.5 + 0.5 * (z / radius)]
 

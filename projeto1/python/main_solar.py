@@ -3,10 +3,13 @@ from OpenGL.GL import (
   glClearColor,
   glEnable,
   glDisable,
+  glBlendFunc,
   glClear,
   glGetString,
   GL_DEPTH_TEST,
-  GL_CULL_FACE,
+  GL_BLEND,
+  GL_SRC_ALPHA,
+  GL_ONE_MINUS_SRC_ALPHA,
   GL_COLOR_BUFFER_BIT,
   GL_DEPTH_BUFFER_BIT,
   GL_VERSION,
@@ -15,52 +18,44 @@ from OpenGL.GL import (
 import glm
 import math
 from pathlib import Path
-from camera3d import Camera3D
-from light import Light
 from shader import Shader
-from material import Material
+from color import Color
 from transform import Transform
 from node import Node
 from scene import Scene
 from disk import Disk
-from texture import * 
+from quad import Quad
+from texture import Texture
+from camera2d import Camera2D
 from solar_system_engine import SolarSystemEngine
 
+
 def initialize():
-  
-  glClearColor(0.0, 0.0, 0.0, 0.0)
-  glEnable(GL_DEPTH_TEST)
-  glDisable(GL_CULL_FACE)
+  glClearColor(0.80,1.0,1.0,1.0)
+  glDisable(GL_DEPTH_TEST)
+
+  glEnable(GL_BLEND)
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
   global camera
-  camera = Camera3D(0, 15, 0)
-  camera.SetCenter(0, 0, 0)
-  camera.SetUpDir(0, 0, -1)
-  camera.SetAngle(45)
-  camera.SetOrtho(True)
+  camera = Camera2D(-10, 10, -10, 10)  
 
-  light = Light(0.0, 1.0, 0.0, 1.0, "world")
-
-  shader = Shader(light, "world")
   root_dir = Path(__file__).resolve().parent.parent
-  shader.AttachVertexShader(str(root_dir / "shaders/ilum_vert/vertex.glsl"))
-  shader.AttachFragmentShader(str(root_dir / "shaders/ilum_vert/fragment.glsl"))
-  shader.Link()
 
-  shd_tex = Shader(light, "world")
-  shd_tex.AttachVertexShader(root_dir / "shaders/ilum_vert/vertex_texture.glsl")
-  shd_tex.AttachFragmentShader(root_dir / "shaders/ilum_vert/fragment_texture.glsl")
+  shd_tex = Shader()
+  shd_tex.AttachVertexShader(root_dir / "shaders/texture/vertex_texture.glsl")
+  shd_tex.AttachFragmentShader(root_dir / "shaders/texture/fragment_texture.glsl")
   shd_tex.Link()
 
-  sun_mat = Material(1.0, 1.0, 1.0)
-  earth_mat = Material(1.0, 1.0, 1.0)
-  moon_mat = Material(1.0, 1.0, 1.0)
-  venus_mat = Material(1.0, 1.0, 1.0)
+  white_color = Color(1.0, 1.0, 1.0) 
 
+  space_tex = Texture("decal", root_dir / "images/space.jpg")
   sun_tex = Texture("decal", root_dir / "images/sun_image.png")
   earth_tex = Texture("decal", root_dir / "images/NASA_earth.jpg")
-  venus_tex = Texture("decal", root_dir / "images/venus.jpg")
-  moon_tex = Texture("decal", root_dir / "images/moon.jpg")
+  venus_tex = Texture("decal", root_dir / "images/artpopvenus.png")
+  moon_tex = Texture("decal", root_dir / "images/moonemoji.png")
+
+  space_quad = Quad()
 
   sun_radius = 2.0
   earth_radius = 0.6
@@ -71,9 +66,10 @@ def initialize():
   moon_disk = Disk(48, moon_radius)
   venus_disk = Disk(56, venus_radius)
 
+  space_trf = Transform(); space_trf.Translate(-10.0, -10.0, -0.5); space_trf.Scale(20.0, 20.0, 1.0)
   sun_trf = Transform()
   earth_orbit = Transform()
-  earth_orbit_radius = 6.0
+  earth_orbit_radius = 7.0
   earth_offset = Transform(); earth_offset.Translate(earth_orbit_radius, 0.0, 0.0)
   venus_orbit = Transform()
   venus_orbit_radius = 3.8
@@ -86,23 +82,19 @@ def initialize():
   moon_offset = Transform(); moon_offset.Translate(moon_orbit_radius, 0.0, 0.0)
   moon_spin = Transform()
 
-  dist = glm.distance(camera.GetEye(), camera.GetCenter())
-  half_extent = max(sun_radius, earth_orbit_radius + max(earth_radius, moon_orbit_radius + moon_radius)) * 1.2
-  angle_rad = 2.0 * math.atan(float(half_extent) / float(dist))
-  camera.SetAngle(math.degrees(angle_rad))
-
-  sun_node = Node(trf=sun_trf, apps=[sun_mat, sun_tex], shps=[sun_disk])
-  venus_node = Node(apps=[venus_mat, venus_tex], shps=[venus_disk])
+  space_node = Node(trf=space_trf, apps=[white_color, space_tex], shps=[space_quad])
+  sun_node = Node(trf=sun_trf, apps=[white_color, sun_tex], shps=[sun_disk])
+  venus_node = Node(apps=[white_color, venus_tex], shps=[venus_disk])
   venus_branch = Node(trf=venus_orbit, nodes=[Node(trf=venus_offset, nodes=[venus_node])])
-  earth_node = Node(trf=earth_tilt, nodes=[Node(trf=earth_spin, apps=[earth_mat, earth_tex], shps=[earth_disk])])
-  moon_node = Node(trf=moon_spin, apps=[moon_mat, moon_tex], shps=[moon_disk])
+  earth_node = Node(trf=earth_tilt, nodes=[Node(trf=earth_spin, apps=[white_color, earth_tex], shps=[earth_disk])])
+  moon_node = Node(trf=moon_spin, apps=[white_color, moon_tex], shps=[moon_disk])
   earth_offset_node = Node(trf=earth_offset, nodes=[
     earth_node,
     Node(trf=moon_orbit, nodes=[Node(trf=moon_offset, nodes=[moon_node])])
   ])
   earth_branch = Node(trf=earth_orbit, nodes=[earth_offset_node])
 
-  root = Node(shd_tex, nodes=[sun_node, venus_branch, earth_branch])
+  root = Node(shd_tex, nodes=[space_node, sun_node, venus_branch, earth_branch])
 
   global scene
   scene = Scene(root)

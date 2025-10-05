@@ -27,8 +27,8 @@ class SolarSystemEngine(Engine):
     self.vo = venus_orbit_speed_deg_per_sec
 
   def Update(self, dt: float):
-    self.earth_orbit_trf.Rotate(self.eo * dt, 0, 1, 0)
-    self.earth_spin_trf.Rotate(self.es * dt, 0, 1, 0)
-    self.moon_orbit_trf.Rotate(self.mo * dt, 0, 1, 0)
-    self.moon_spin_trf.Rotate(self.ms * dt, 0, 1, 0)
-    self.venus_orbit_trf.Rotate(self.vo * dt, 0, 1, 0)
+    self.earth_orbit_trf.Rotate(self.eo * dt, 0, 0, 1)
+    self.earth_spin_trf.Rotate(self.es * dt, 0, 0, 1)
+    self.moon_orbit_trf.Rotate(self.mo * dt, 0, 0, 1)
+    self.moon_spin_trf.Rotate(self.ms * dt, 0, 0, 1)
+    self.venus_orbit_trf.Rotate(self.vo * dt, 0, 0, 1)
