@@ -6,6 +6,7 @@ class State:
     self.camera = camera
     self.shader = []
     self.stack = [glm.mat4(1.0)]
+    self.light = None
     glUseProgram(0) # compatibility profile as default
 
   def PushShader (self, shd):
@@ -26,6 +27,12 @@ class State:
 
   def GetCamera (self):
     return self.camera
+
+  def SetLight (self, light):
+    self.light = light
+
+  def GetLight (self):
+    return self.light
 
   def PushMatrix (self):
     self.stack.append(self.GetCurrentMatrix())

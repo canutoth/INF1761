@@ -55,6 +55,10 @@ class Node:
     # load
     if self.shader:
       self.shader.Load(st)
+      # Load light if available
+      light = st.GetLight()
+      if light:
+        light.Load(st)
     if self.trf:
       self.trf.Load(st)
     for app in self.apps:

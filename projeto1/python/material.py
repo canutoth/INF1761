@@ -2,7 +2,7 @@ import glm
 from appearance import Appearance
 
 class Material(Appearance):
-    def __init__ (self, r, g, b, opacity=1.0):
+    def __init__ (self, r=1.0, g=1.0, b=1.0, opacity=1.0):
       Appearance.__init__(self)
       self.amb = glm.vec4(r,g,b,1)
       self.dif = glm.vec4(r,g,b,1)
