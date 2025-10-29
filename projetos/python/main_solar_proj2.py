@@ -31,6 +31,8 @@ from texture import Texture
 from camera3d import Camera3D
 from light import Light
 from material import Material
+from skybox import SkyBox
+from texcube import TexCube
 from solar_system_engine_proj2 import SolarSystemEngineProj2
 from camera_engine import CameraEngine
 
@@ -67,12 +69,19 @@ def initialize():
   shd_light.AttachFragmentShader(root_dir / "shaders/ilum_vert/per_fragment_fragment.glsl")
   shd_light.Link()
 
-  # Shader customizado para o Sol (com manchas procedurais)
+  # Shader customizado para o Sol
   global shd_sun
   shd_sun = Shader(space="world")
   shd_sun.AttachVertexShader(root_dir / "shaders/ilum_vert/sun_vertex.glsl")
   shd_sun.AttachFragmentShader(root_dir / "shaders/ilum_vert/sun_fragment.glsl")
   shd_sun.Link()
+
+  # Shader customizado para o SkyBox
+  global shd_skybox
+  shd_skybox = Shader(space="world")
+  shd_skybox.AttachVertexShader(root_dir / "shaders/ilum_vert/skybox_vertex.glsl")
+  shd_skybox.AttachFragmentShader(root_dir / "shaders/ilum_vert/skybox_fragment.glsl")
+  shd_skybox.Link()
 
   # Luz posicionada no Sol
   global light
@@ -241,7 +250,8 @@ def initialize():
                         # Lua
                         Node(
                           trf=moon_orbit,
-                          nodes=[ moon_frame_node
+                          nodes=[ 
+                            moon_frame_node
                           ]
                         )
                       ]
@@ -249,12 +259,25 @@ def initialize():
 
   earth_branch = Node(
     trf=earth_orbit,
-    nodes=[ earth_frame_node
+    nodes=[ 
+      earth_frame_node
     ]
   )
 
+  # Montando o SkyBox
+  skybox = SkyBox()
+
+  skybox_tex = TexCube("skybox", root_dir / "images/a.jpg")
+  skybox_branch = Node(
+                        shader = shd_skybox,
+                        apps=[
+                          skybox_tex
+                        ], 
+                        shps=[skybox]
+                      )
+
   # Raiz da cena
-  root = Node(shd_light, nodes=[sun_node, venus_node, earth_branch])
+  root = Node(shd_light, nodes=[skybox_branch, sun_node, venus_node, earth_branch])
 
   # Cena e engine
   global scene

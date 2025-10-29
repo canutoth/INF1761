@@ -2,6 +2,7 @@ from OpenGL.GL import *
 from shape import *
 import glm
 import numpy as np
+from PIL import Image
 
 class SkyBox (Shape):
   def __init__ (self):
@@ -74,3 +75,4 @@ class SkyBox (Shape):
     glDrawArrays(GL_TRIANGLES,0,36)
     glDepthMask(GL_TRUE)
     st.PopMatrix()
+
