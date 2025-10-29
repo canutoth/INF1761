@@ -7,6 +7,7 @@ def create_shader (type, filename):
     raise RuntimeError("could not create shader")
   text = readfile(filename)
   glShaderSource(id,text)
+  filename = str(filename)
   compile_shader(id,filename)
   return id
 

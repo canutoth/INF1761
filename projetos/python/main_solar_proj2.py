@@ -82,10 +82,10 @@ def initialize():
   light.SetSpecular(1.0, 1.0, 1.0)
 
   # Texturas
-  sun_tex = Texture("decal", root_dir / "images/sun_image.png")
-  earth_tex = Texture("decal", root_dir / "images/NASA_earth.jpg")
-  venus_tex = Texture("decal", root_dir / "images/artpopvenus.png")
-  moon_tex = Texture("decal", root_dir / "images/moonemoji.png")
+  sun_tex = Texture("decal", root_dir / "images/sun_texture.jpg")
+  earth_tex = Texture("decal", root_dir / "images/earth.jpg")
+  venus_tex = Texture("decal", root_dir / "images/venus_texture.jpg")
+  moon_tex = Texture("decal", root_dir / "images/moon_texture.jpg")
 
   # Esferas (geometria 3D)
   sun_sphere = Sphere(64, 64)
@@ -117,7 +117,7 @@ def initialize():
 
   # Lua - material menos reflexivo
   moon_material = Material()
-  moon_material.SetAmbient(0.3, 0.7, 0.3)
+  moon_material.SetAmbient(0.3, 0.3, 0.3)
   moon_material.SetDiffuse(0.6, 0.6, 0.6)
   moon_material.SetSpecular(0.2, 0.2, 0.2)
   moon_material.SetShininess(16.0)
@@ -174,7 +174,7 @@ def initialize():
     nodes=[
       Node(
         trf=sun_spin,
-        apps=[sun_material],
+        apps=[sun_material, sun_tex],
         shps=[sun_sphere]
       )
     ]

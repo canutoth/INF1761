@@ -24,6 +24,8 @@ uniform vec4 cpos;  // Camera position in lighting space
 // Output
 out vec4 FragColor;
 
+uniform sampler2D decal;
+
 void main()
 {
     // Normalize interpolated normal
@@ -57,34 +59,16 @@ void main()
     vec4 specular = lspe * mspe * spec;
     
     // Combine all components
-    vec4 baseColor = ambient + diffuse + specular;
+    vec4 baseColor = (ambient + diffuse) * texture(decal, fTexCoord) + specular;
     
-    // Adicionar manchas solares procedurais
-    // Usar coordenadas de textura para criar padrões
-    float u = fTexCoord.x;
-    float v = fTexCoord.y;
-    
-    // Mancha 1 - grande perto do equador
-    float spot1 = smoothstep(0.05, 0.0, length(vec2(u - 0.3, v - 0.5)));
-    
-    // Mancha 2 - média
-    float spot2 = smoothstep(0.08, 0.0, length(vec2(u - 0.7, v - 0.6)));
-    
-    // Mancha 3 - pequena
-    float spot3 = smoothstep(0.04, 0.0, length(vec2(u - 0.5, v - 0.3)));
-    
-    // Mancha 4 - outra pequena
-    float spot4 = smoothstep(0.06, 0.0, length(vec2(u - 0.85, v - 0.4)));
-    
-    // Linha vertical para visualizar rotação
-    float line = smoothstep(0.015, 0.0, abs(u - 0.5));
-    
-    // Combinar todas as manchas
-    float spots = spot1 + spot2 + spot3 + spot4 + line * 0.5;
-    spots = clamp(spots, 0.0, 1.0);
-    
-    // Escurecer as manchas (manchas solares são mais escuras)
-    vec3 spotColor = vec3(0.6, 0.4, 0.1); // Cor marrom/escura
-    FragColor.rgb = mix(baseColor.rgb, spotColor, spots * 0.6);
-    FragColor.a = mopacity;
+    vec3 tex = texture(decal, fTexCoord).rgb;
+    float lum = dot(tex, vec3(0.2126, 0.7152, 0.0722));
+
+    float e = smoothstep(0.0, 0.90, lum);   
+    vec3  glowColor = vec3(0.5, 0.3, 0.0);  
+    float glowStrength = 0.8;                             
+
+    vec3 color = baseColor.rgb + glowStrength * e * glowColor;
+
+    FragColor = vec4(color, mopacity);
 }

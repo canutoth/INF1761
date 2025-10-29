@@ -3,6 +3,7 @@
 // Input from vertex shader
 in vec3 fPosition;  // Position in lighting space
 in vec3 fNormal;    // Normal in lighting space
+in vec2 fTexcoord;   
 
 // Light uniforms
 uniform vec4 lpos;  // Light position in lighting space
@@ -22,6 +23,8 @@ uniform vec4 cpos;  // Camera position in lighting space
 
 // Output
 out vec4 FragColor;
+
+uniform sampler2D decal;
 
 void main()
 {
@@ -56,6 +59,6 @@ void main()
     vec4 specular = lspe * mspe * spec;
     
     // Combine all components
-    FragColor = ambient + diffuse + specular;
+    FragColor = (ambient + diffuse) * texture(decal, fTexcoord) + specular;
     FragColor.a = mopacity;
 }
