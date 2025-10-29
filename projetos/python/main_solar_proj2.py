@@ -32,6 +32,10 @@ from camera3d import Camera3D
 from light import Light
 from material import Material
 from solar_system_engine_proj2 import SolarSystemEngineProj2
+from camera_engine import CameraEngine
+
+global camera_global, camera_earth, active_camera
+global earth_frame_node, moon_frame_node
 
 def initialize():
   """Inicializa a cena 3D do sistema solar"""
@@ -39,11 +43,20 @@ def initialize():
   glEnable(GL_DEPTH_TEST)
   glEnable(GL_CULL_FACE)
 
-  # Câmera 3D
-  global camera
-  camera = Camera3D(0, 15, 30)  # Posição da câmera
-  camera.SetCenter(0, 0, 0)      # Olhando para o centro (Sol)
-  camera.SetUpDir(0, 1, 0)
+  # Câmeras
+  global camera_global, camera_earth, active_camera
+  
+  # Câmera 1: Global
+  camera_global = Camera3D(0, 15, 30)  # Posição da câmera
+  camera_global.SetCenter(0, 0, 0)     # Olhando para o centro (Sol)
+  camera_global.SetUpDir(0, 1, 0)
+
+  # Câmera 2: Na Terra 
+  camera_earth = Camera3D(0, 0, 0)
+  camera_earth.SetUpDir(0, 1, 0)
+  
+  # Define a câmera ativa inicial como a global
+  active_camera = camera_global
 
   root_dir = Path(__file__).resolve().parent.parent
 
@@ -104,7 +117,7 @@ def initialize():
 
   # Lua - material menos reflexivo
   moon_material = Material()
-  moon_material.SetAmbient(0.3, 0.3, 0.3)
+  moon_material.SetAmbient(0.3, 0.7, 0.3)
   moon_material.SetDiffuse(0.6, 0.6, 0.6)
   moon_material.SetSpecular(0.2, 0.2, 0.2)
   moon_material.SetShininess(16.0)
@@ -152,7 +165,8 @@ def initialize():
   moon_spin = Transform()
 
   # Hierarquia de nós da cena
-  
+  global earth_frame_node, moon_frame_node
+
   # Sol (com shader customizado para mostrar manchas)
   sun_node = Node(
     shader=shd_sun,
@@ -189,51 +203,53 @@ def initialize():
   )
 
   # Terra com Lua
+  moon_frame_node = Node(
+                      trf=moon_offset,
+                      nodes=[
+                        Node(
+                          trf=moon_spin,
+                          nodes=[
+                            Node(
+                              trf=moon_scale,
+                              apps=[moon_material, moon_tex],
+                              shps=[moon_sphere]
+                            )
+                          ]
+                        )
+                      ]
+                    )
+  
+  earth_frame_node = Node(
+                      trf=earth_offset,
+                      nodes=[
+                        # Terra
+                        Node(
+                          trf=earth_tilt,
+                          nodes=[
+                            Node(
+                              trf=earth_spin,
+                              nodes=[
+                                Node(
+                                  trf=earth_scale,
+                                  apps=[earth_material, earth_tex],
+                                  shps=[earth_sphere]
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                        # Lua
+                        Node(
+                          trf=moon_orbit,
+                          nodes=[ moon_frame_node
+                          ]
+                        )
+                      ]
+                    )
+
   earth_branch = Node(
     trf=earth_orbit,
-    nodes=[
-      Node(
-        trf=earth_offset,
-        nodes=[
-          # Terra
-          Node(
-            trf=earth_tilt,
-            nodes=[
-              Node(
-                trf=earth_spin,
-                nodes=[
-                  Node(
-                    trf=earth_scale,
-                    apps=[earth_material, earth_tex],
-                    shps=[earth_sphere]
-                  )
-                ]
-              )
-            ]
-          ),
-          # Lua
-          Node(
-            trf=moon_orbit,
-            nodes=[
-              Node(
-                trf=moon_offset,
-                nodes=[
-                  Node(
-                    trf=moon_spin,
-                    nodes=[
-                      Node(
-                        trf=moon_scale,
-                        apps=[moon_material, moon_tex],
-                        shps=[moon_sphere]
-                      )
-                    ]
-                  )
-                ]
-              )
-            ]
-          )
-        ]
-      )
+    nodes=[ earth_frame_node
     ]
   )
 
@@ -264,6 +280,14 @@ def initialize():
     )
   )
 
+  scene.AddEngine(
+      CameraEngine(
+          camera=camera_earth,
+          earth_node=earth_frame_node,
+          moon_node=moon_frame_node
+      )
+  )
+
 
 def update(dt):
   """Atualiza a cena"""
@@ -272,16 +296,27 @@ def update(dt):
 
 def display():
   """Renderiza a cena"""
+  global active_camera
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-  scene.Render(camera)
+  scene.Render(active_camera)
 
 
 def keyboard(win, key, scancode, action, mods):
   """Tratamento de teclado"""
+  global active_camera, camera_global, camera_earth
+
   if key == glfw.KEY_Q and action == glfw.PRESS:
     glfw.set_window_should_close(win, glfw.TRUE)
   elif key == glfw.KEY_ESCAPE and action == glfw.PRESS:
     glfw.set_window_should_close(win, glfw.TRUE)
+  elif key == glfw.KEY_C and action == glfw.PRESS:
+    # Realiza a troca das câmeras
+    if active_camera == camera_global:
+      active_camera = camera_earth
+      print("Câmera: Visão da Terra -> Lua")
+    else:
+      active_camera = camera_global
+      print("Câmera: Visão Global")
 
 
 def main():
