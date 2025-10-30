@@ -83,6 +83,13 @@ def initialize():
   shd_skybox.AttachFragmentShader(root_dir / "shaders/ilum_vert/skybox_fragment.glsl")
   shd_skybox.Link()
 
+  # Shader customizado para o SkyBox
+  global shd_rugosidade
+  shd_rugosidade = Shader(space="world")
+  shd_rugosidade.AttachVertexShader(root_dir / "shaders/ilum_vert/rugosidade_vertex.glsl")
+  shd_rugosidade.AttachFragmentShader(root_dir / "shaders/ilum_vert/rugosidade_fragment.glsl")
+  shd_rugosidade.Link()
+
   # Luz posicionada no Sol
   global light
   light = Light(0, 0, 0, 1, "world")  # Luz pontual na posição do Sol
@@ -93,14 +100,20 @@ def initialize():
   # Texturas
   sun_tex = Texture("decal", root_dir / "images/sun_texture.jpg")
   earth_tex = Texture("decal", root_dir / "images/earth.jpg")
+  earth_depth = Texture("normalMap", root_dir / "images/earth-normal.png")
   venus_tex = Texture("decal", root_dir / "images/venus_texture.jpg")
   moon_tex = Texture("decal", root_dir / "images/moon_texture.jpg")
+  moon_depth = Texture("normalMap", root_dir / "images/moon_normal.png")
+  skybox_tex = TexCube("skybox", root_dir / "images/a.jpg")
 
   # Esferas (geometria 3D)
   sun_sphere = Sphere(64, 64)
   earth_sphere = Sphere(48, 48)
   venus_sphere = Sphere(48, 48)
   moon_sphere = Sphere(32, 32)
+
+  # Montando o SkyBox
+  skybox = SkyBox()
 
   # Materiais dos astros
   # Sol - emissor de luz (alta componente ambiente, mas com algum contraste)
@@ -220,7 +233,7 @@ def initialize():
                           nodes=[
                             Node(
                               trf=moon_scale,
-                              apps=[moon_material, moon_tex],
+                              apps=[moon_material, moon_tex, moon_depth],
                               shps=[moon_sphere]
                             )
                           ]
@@ -230,6 +243,7 @@ def initialize():
   
   earth_frame_node = Node(
                       trf=earth_offset,
+                      shader = shd_rugosidade,
                       nodes=[
                         # Terra
                         Node(
@@ -240,7 +254,7 @@ def initialize():
                               nodes=[
                                 Node(
                                   trf=earth_scale,
-                                  apps=[earth_material, earth_tex],
+                                  apps=[earth_material, earth_tex, earth_depth],
                                   shps=[earth_sphere]
                                 )
                               ]
@@ -264,10 +278,6 @@ def initialize():
     ]
   )
 
-  # Montando o SkyBox
-  skybox = SkyBox()
-
-  skybox_tex = TexCube("skybox", root_dir / "images/a.jpg")
   skybox_branch = Node(
                         shader = shd_skybox,
                         apps=[
