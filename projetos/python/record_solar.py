@@ -6,8 +6,24 @@ import time
 from pathlib import Path
 
 # Import the solar system components
-from main_solar import initialize, update, display
-import main_solar
+from main_solar_proj2 import initialize, update, display
+import main_solar_proj2
+
+
+def keyboard(win, key, scancode, action, mods):
+    """Tratamento de teclado para trocar câmeras durante a gravação"""
+    if key == glfw.KEY_Q and action == glfw.PRESS:
+        glfw.set_window_should_close(win, glfw.TRUE)
+    elif key == glfw.KEY_ESCAPE and action == glfw.PRESS:
+        glfw.set_window_should_close(win, glfw.TRUE)
+    elif key == glfw.KEY_C and action == glfw.PRESS:
+        # Realiza a troca das câmeras
+        if main_solar_proj2.active_camera == main_solar_proj2.camera_global:
+            main_solar_proj2.active_camera = main_solar_proj2.camera_earth
+            print("Câmera: Visão da Terra -> Lua")
+        else:
+            main_solar_proj2.active_camera = main_solar_proj2.camera_global
+            print("Câmera: Visão Global")
 
 
 def init_scene(window_width: int, window_height: int):
@@ -16,21 +32,21 @@ def init_scene(window_width: int, window_height: int):
     # Call the solar system initialization
     initialize()
     
-    # Access the global camera and scene from main_solar
-    return main_solar.camera, main_solar.scene
+    # Access the global cameras and scene from main_solar_proj2
+    return main_solar_proj2.scene
 
 
-def render_frame(camera, scene, dt: float):
+def render_frame(scene, dt: float):
     # Update animation
     scene.Update(dt)
     
-    # Render the scene
+    # Render the scene using the active camera from main_solar_proj2
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    scene.Render(camera)
+    scene.Render(main_solar_proj2.active_camera)
 
 
 def main(
-    out_path: str = "solar_system_recording.mp4",
+    out_path: str = "solar_system_recording_proj2.mp4",
     duration_sec: float = 10.0,
     fps: int = 30,
     width: int = 800,
@@ -46,7 +62,7 @@ def main(
     glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
     glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, GL_TRUE)
 
-    window = glfw.create_window(width, height, "sun-earth-moon", None, None)
+    window = glfw.create_window(width, height, "sun-earth-moon-venus-3d", None, None)
     if not window:
         print("Failed to create window")
         glfw.terminate()
@@ -54,9 +70,12 @@ def main(
 
     glfw.make_context_current(window)
     glfw.swap_interval(1)  # vsync
+    
+    # Set keyboard callback
+    glfw.set_key_callback(window, keyboard)
 
     # Initialize scene (shaders, geometry, etc.)
-    camera, scene = init_scene(width, height)
+    scene = init_scene(width, height)
 
     # Prepare video writer (MP4)
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -85,7 +104,7 @@ def main(
         prev_time = current_time
 
         # Draw the scene
-        render_frame(camera, scene, dt)
+        render_frame(scene, dt)
 
         # Read pixels from framebuffer (origin is bottom-left in OpenGL)
         # We'll read RGB then convert to BGR and flip vertically for OpenCV
@@ -115,7 +134,7 @@ def main(
         current_time = time.perf_counter()
         dt = current_time - prev_time
         prev_time = current_time
-        render_frame(camera, scene, dt)
+        render_frame(scene, dt)
         glfw.swap_buffers(window)
         glfw.poll_events()
 
